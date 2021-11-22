@@ -1,0 +1,27 @@
+<project>
+        <source name="src">
+                <package name="com.test">
+                    <class name="MyClass" />
+                </package>
+                
+                <package name="com.test.exec">
+                      <class name="ClassExec" />
+                    <class name="ClassExec2" />
+                </package>
+        </source>
+
+
+        <source name="source">
+                <package name="my.pack">
+                    <class name="TestPack" />
+                </package>
+                
+                <package name="my.package1">
+                      <class name="MyServlet" />
+                    <class name="MyServlet2" />
+                </package>
+        </source>        
+            
+        
+   
+</project>
