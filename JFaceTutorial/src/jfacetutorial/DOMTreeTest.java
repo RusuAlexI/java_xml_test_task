@@ -3,6 +3,7 @@ package jfacetutorial;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -11,7 +12,15 @@ import javax.swing.event.*;
 import javax.swing.table.*;
 import javax.swing.tree.*;
 import javax.xml.parsers.*;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMResult;
+import javax.xml.transform.sax.SAXSource;
+
 import org.w3c.dom.*;
+import org.xml.sax.InputSource;
+import org.xml.sax.XMLReader;
 
 public class DOMTreeTest {
 
@@ -34,27 +43,7 @@ class DOMTreeFrame extends JFrame {
 	public DOMTreeFrame() {
 		setTitle("DOMTreeTest");
 		setSize(DEFAULT_WIDTH, DEFAULT_HEIGHT);
-
-		JMenu fileMenu = new JMenu("File");
-		JMenuItem openItem = new JMenuItem("Open");
-		openItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
 				openFile();
-			}
-		});
-		fileMenu.add(openItem);
-
-		JMenuItem exitItem = new JMenuItem("Exit");
-		exitItem.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent event) {
-				System.exit(0);
-			}
-		});
-		fileMenu.add(exitItem);
-
-		JMenuBar menuBar = new JMenuBar();
-		menuBar.add(fileMenu);
-		setJMenuBar(menuBar);
 	}
 
 	public void openFile() {
@@ -83,19 +72,26 @@ class DOMTreeFrame extends JFrame {
 				}
 				return builder.parse(file);
 			}
+			
+			
 
 			protected void done() {
 				try {
-					Document doc = get();
-					JTree tree = new JTree(new DOMTreeModel(doc));
+					UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+					 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+					 JFrame.setDefaultLookAndFeelDecorated(true);
+					 Document doc = parseDocument(new FileInputStream(new File("C:/Users/Sandu/task-third-try/JFaceTutorial/resource/struct.xml")));
+					doc.getDocumentElement().normalize();
+					
+					JTree tree = new JTree(new DOMTreeModel(doc));	
+					
 					DOMTreeCellRenderer renderer = new DOMTreeCellRenderer();
-//					Icon closedIcon = new ImageIcon(getClass().getResource("check.png"));
-//					Icon openIcon = new ImageIcon(getClass().getResource("fs.png"));
-//					Icon leafIcon = new ImageIcon(getClass().getResource("cs.png"));
-//					renderer.setClosedIcon(closedIcon);
-//					renderer.setOpenIcon(openIcon);
-//					renderer.setLeafIcon(leafIcon);
+					
+					Icon closedIcon = new ImageIcon(getClass().getResource("cs.png"));
+					
+					renderer.setClosedIcon(closedIcon);
 					tree.setCellRenderer(renderer);
+					
 					checkTreeManager = AddCh.new CheckTreeManager(tree, null);
 
 					setContentPane(new JScrollPane(tree));
@@ -106,6 +102,24 @@ class DOMTreeFrame extends JFrame {
 			}
 		}.execute();
 	}
+	
+	public static Document parseDocument(InputStream inputStream) throws Exception {
+		 
+		InputSource inputSource = new InputSource(inputStream);
+		 
+		SAXParserFactory saxFactory = SAXParserFactory.newInstance();
+		 SAXParser parser = saxFactory.newSAXParser();
+		 XMLReader reader = new XMLTrimFilter(parser.getXMLReader());
+		 
+		TransformerFactory factory = TransformerFactory.newInstance();
+		 Transformer transformer = factory.newTransformer();
+		 transformer.setOutputProperty(OutputKeys.INDENT, "no");
+		 DOMResult result = new DOMResult();
+		 transformer.transform(new SAXSource(reader, inputSource), result);
+		 return (Document) result.getNode();
+		 }
+	
+	
 
 	private DocumentBuilder builder;
 	private static final int DEFAULT_WIDTH = 400;
@@ -128,11 +142,12 @@ class DOMTreeModel implements TreeModel {
 		NodeList list = node.getChildNodes();
 		return list.getLength();
 	}
+	
 
 	public Object getChild(Object parent, int index) {
 		Node node = (Node) parent;
 		NodeList list = node.getChildNodes();
-		System.out.println("length - " + list.getLength());
+		System.out.println("child length - " + list.getLength());
 		System.out.println(list.item(index));
 
 		return list.item(index);
@@ -143,7 +158,7 @@ class DOMTreeModel implements TreeModel {
 		NodeList list = node.getChildNodes();
 		for (int i = 0; i < list.getLength(); i++) {
 			if (getChild(node, i) == child)
-				return i;
+				return i+1;
 		}
 		return -1;
 	}
@@ -170,17 +185,17 @@ class DOMTreeCellRenderer extends DefaultTreeCellRenderer {
 			boolean leaf, int row, boolean hasFocus) {
 		Node node = (Node) value;
 
-		if (node instanceof Element) {
-
+		if (node.getNodeType() == Node.ELEMENT_NODE) {
+			setText("test2");
 			setIcon(closedIcon);
 			return elementPanel((Element) node);
 		}
 
 		if (node instanceof CharacterData) {
-
 			setText("test");
-		} else
-			setText(node.getClass() + ": " + node.toString());
+			setIcon(openIcon);
+		} else {
+			setText(node.getClass() + ": " + node.toString());}
 		return this;
 	}
 
