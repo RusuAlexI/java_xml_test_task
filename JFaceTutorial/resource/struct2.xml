@@ -5,12 +5,8 @@
                 </package>
                 
                 <package name="com.test.exec">
-                      <class>
-                            ClassExec
-                    </class>
-                    <class>
-                            ClassExec2
-                    </class>
+                      <class name="ClassExec" />
+                    <class name="ClassExec2" />
                 </package>
         </source>
 
@@ -21,12 +17,8 @@
                 </package>
                 
                 <package name="my.package1">
-                      <class>
-                            MyServlet
-                    </class>
-                    <class>
-                            MyServlet2
-                    </class>
+                      <class name="MyServlet" />
+                    <class name="MyServlet2" />
                 </package>
         </source>        
             

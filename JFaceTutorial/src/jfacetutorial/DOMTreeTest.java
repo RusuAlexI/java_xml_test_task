@@ -66,34 +66,25 @@ class DOMTreeFrame extends JFrame {
 
 		new SwingWorker<Document, Void>() {
 			protected Document doInBackground() throws Exception {
-				if (builder == null) {
-					DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-					builder = factory.newDocumentBuilder();
-				}
-				return builder.parse(file);
+				return parseDocument(new FileInputStream(file));
 			}
 			
 			
 
 			protected void done() {
 				try {
-					UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
+					 UIManager.setLookAndFeel("com.sun.java.swing.plaf.windows.WindowsLookAndFeel");
 					 UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 					 JFrame.setDefaultLookAndFeelDecorated(true);
-					 Document doc = parseDocument(new FileInputStream(new File("C:/Users/Sandu/task-third-try/JFaceTutorial/resource/struct.xml")));
-					doc.getDocumentElement().normalize();
+					 Document doc = get();
+					 doc.getDocumentElement().normalize();
 					
-					JTree tree = new JTree(new DOMTreeModel(doc));	
-					
-					DOMTreeCellRenderer renderer = new DOMTreeCellRenderer();
-					
-					Icon closedIcon = new ImageIcon(getClass().getResource("cs.png"));
-					
-					renderer.setClosedIcon(closedIcon);
-					tree.setCellRenderer(renderer);
+					JTree tree = new JTree(new DOMTreeModel(doc));						
+					XmlTreeRenderer renderer2 = new XmlTreeRenderer();
+
+					tree.setCellRenderer(renderer2);
 					
 					checkTreeManager = AddCh.new CheckTreeManager(tree, null);
-
 					setContentPane(new JScrollPane(tree));
 					validate();
 				} catch (Exception e) {
@@ -104,7 +95,6 @@ class DOMTreeFrame extends JFrame {
 	}
 	
 	public static Document parseDocument(InputStream inputStream) throws Exception {
-		 
 		InputSource inputSource = new InputSource(inputStream);
 		 
 		SAXParserFactory saxFactory = SAXParserFactory.newInstance();
@@ -179,48 +169,59 @@ class DOMTreeModel implements TreeModel {
 	private Document doc;
 }
 
-class DOMTreeCellRenderer extends DefaultTreeCellRenderer {
 
-	public Component getTreeCellRendererComponent(JTree tree, Object value, boolean selected, boolean expanded,
-			boolean leaf, int row, boolean hasFocus) {
-		Node node = (Node) value;
-
-		if (node.getNodeType() == Node.ELEMENT_NODE) {
-			setText("test2");
-			setIcon(closedIcon);
-			return elementPanel((Element) node);
-		}
-
-		if (node instanceof CharacterData) {
-			setText("test");
-			setIcon(openIcon);
-		} else {
-			setText(node.getClass() + ": " + node.toString());}
-		return this;
-	}
-
-	public static JPanel elementPanel(Element e) {
-		JPanel panel = new JPanel();
-		final NamedNodeMap map = e.getAttributes();
-		panel.add(new JTable(new AbstractTableModel() {
-			public int getRowCount() {
-				return map.getLength();
-			}
-
-			public int getColumnCount() {
-				return 1;
-			}
-
-			public Object getValueAt(int r, int c) {
-				return map.item(r).getNodeValue().substring(c);
-			}
-		}));
-		return panel;
-	}
-
-	public static String characterString(CharacterData node) {
-		StringBuilder builder = new StringBuilder(node.getData());
-
-		return builder.toString();
-	}
+ class XmlTreeRenderer extends DefaultTreeCellRenderer {
+	 
+private Color elementColor = new Color(0, 0, 128);
+ private Color attributeColor = new Color(0, 128, 0);
+ 
+public XmlTreeRenderer() {
+	Icon leafIcon = new ImageIcon(getClass().getResource("/cs2.png"));
+ setLeafIcon(leafIcon);
+ }
+ 
+@Override
+ public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded, boolean leaf, int row, boolean hasFocus) {
+ Node node = (Node) value;
+ 
+ switch (node.getNodeType()) {
+ case Node.ELEMENT_NODE:
+	 Element element = (Element) node;
+	 if( element.getAttribute("name")!=null)
+		 value = element.getAttribute("name");
+	 else
+		 value = element.getElementsByTagName(element.getTagName()).item(0).getTextContent();
+ break;
+ case Node.ATTRIBUTE_NODE:
+ value = '@' + node.getNodeName();
+ break;
+ case Node.TEXT_NODE:
+ value = node.getNodeValue().trim();
+ break;
+ case Node.COMMENT_NODE:
+ value = "<!--" + node.getNodeValue() + "-->";
+ break;
+ case Node.DOCUMENT_TYPE_NODE:
+ DocumentType dtype = (DocumentType) node;
+ value = "<!DOCTYPE " + dtype.getName() + '>';
+ break;
+ default:
+ value = node.getNodeName();
+ }
+ 
+ super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+ 
+if (!selected) {
+ switch (node.getNodeType()) {
+ case Node.ELEMENT_NODE:
+ setForeground(elementColor);
+ break;
+ case Node.ATTRIBUTE_NODE:
+ setForeground(attributeColor);
+ break;
+ }
+ }
+ 
+ return this;
+ }
 }
